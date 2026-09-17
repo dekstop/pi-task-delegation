@@ -1,0 +1,13 @@
+{
+  "name": "pi-task-delegation",
+  "version": "0.1.0",
+  "description": "Pi extension for context-isolated task delegation",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
