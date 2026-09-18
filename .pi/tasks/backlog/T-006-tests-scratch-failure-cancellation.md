@@ -2,6 +2,8 @@
 
 Write tests for scratch lifecycle, failure handling, and cancellation.
 
+**Note (from T-003):** Same SDK constraint as T-005 — `@mariozechner/pi-coding-agent` isn't installed locally, so integration tests must `await import(...)` and `describe.skipIf` when unavailable. The cancellation path is already implemented in the executor: `signal` (3rd tool `execute` arg) → `executeChildTask.signal` → `session.abort()`, with `dispose()` in `finally` and ephemeral scratch cleaned.
+
 **Scope:**
 - Scratch:
   - `scratch: "none"`: no directory created.

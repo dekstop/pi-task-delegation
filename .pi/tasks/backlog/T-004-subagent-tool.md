@@ -9,14 +9,27 @@ Create `index.ts` — the Pi extension entry point.
   - `task: string` (required) — natural-language task description
   - `scratch: "none" | "ephemeral" | "retain"` (optional, default `"none"`)
 - Tool execution flow:
-  1. Generate task ID (e.g. `crypto.randomUUID()`)
-  2. Create scratch if mode != `"none"` (via T-002)
-  3. Execute child session (via T-003)
-  4. If scratch is `"ephemeral"`: clean up scratch in `finally`
-  5. If scratch is `"retain"`: include path in result
-  6. Return result to parent
-- Config: read `scratchBaseDir` from extension config/settings if provided.
-- The child system prompt should be small: delegation boundary + task + scratch path (if any).
+  1. Generate task ID (`crypto.randomUUID()`) — single path segment.
+  2. Call `executeChildTask(task, { taskId, cwd: ctx.cwd, scratchMode, scratchConfig, signal, onStatus })`.
+  3. Map `ChildResult` → tool result message (see Learnings).
+- Config: read `scratchBaseDir` from extension config/settings if provided → `scratchConfig`.
+- Scratch is owned by the executor (T-003): the tool passes `scratchMode` + `scratchConfig` and reads `scratchPath`/`scratchError` from `ChildResult`. (Supersedes the old "tool creates/cleans scratch" steps.)
+- The child does NOT receive the `subagent` tool (guaranteed by the executor's tool allowlist).
+
+**Learnings from T-003 (executor.ts):**
+- `executeChildTask(task, { taskId, cwd, agentDir?, scratchMode?, scratchConfig?, signal?, onStatus? }): Promise<ChildResult>`; `ChildResult = { ok, output, error?, stopReason?, scratchPath?, scratchError? }`. Never throws.
+- Registration: `pi.registerTool({ name, label, description, parameters, execute })`; `execute(_toolCallId, params, signal, onUpdate, ctx)`.
+- `cwd` from `ctx.cwd`; omit `agentDir` (executor defaults to `getAgentDir()`).
+- `signal` (3rd execute arg) → `executeChildTask.signal` (Esc cancels the child).
+- `onUpdate` (4th execute arg) → `executeChildTask.onStatus` (minimal: "starting"/"done").
+- Tool result: return `{ content: [{ type: "text", text }], isError? }`. `ok:true` → `output` as text (+ mention `scratchPath` if retain). `ok:false` → useful error + `isError: true`. Append `scratchError` without obscuring the main outcome. Surface failures as `isError` results, not throws (keeps the parent usable).
+- Params: `task: Type.String()`; `scratch: StringEnum(["none","ephemeral","retain"])` (optional). `Type` from `typebox`, `StringEnum` from `@mariozechner/pi-ai`.
+
+**Open / not final:**
+- Exact `onUpdate` partial-result shape (check the SDK type) — minimal status strings for now.
+- `isError: true` vs error-text-only on failure — leaning `isError: true` for genuine failures.
+- How the extension reads `scratchBaseDir` (extension config vs settings) — needs the ExtensionAPI config API.
+- `label`/`description` wording.
 
 **Acceptance criteria:**
 - `subagent` tool is registered and callable by the parent.
@@ -28,4 +41,4 @@ Create `index.ts` — the Pi extension entry point.
 - Retained scratch path is mentioned in the result.
 - The child does NOT receive the `subagent` tool.
 
-**Next:** Implement, then test in T-005 and T-006.
+**Next:** Implement `index.ts` (register `subagent`, map `ChildResult` → tool result). Then T-005/T-006.

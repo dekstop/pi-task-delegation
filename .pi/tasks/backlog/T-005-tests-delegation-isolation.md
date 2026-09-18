@@ -2,6 +2,8 @@
 
 Write tests for core delegation behaviour and context isolation.
 
+**Note (from T-003):** Real child-session tests need `@mariozechner/pi-coding-agent`, which is NOT installed locally (Pi provides it at runtime) — plain `npx vitest run` can't resolve it. So integration tests must `await import(...)` and `describe.skipIf` when unavailable: keeps the local suite green (skipped) and runs where the SDK is present. Pure-helper coverage already lives in `test/executor.test.ts`.
+
 **Scope:**
 - Basic delegation: parent invokes `subagent`, child session is created, child receives the task, child executes, parent receives the final result.
 - Context isolation: information present only in the parent conversation is NOT available to the child. (e.g. parent knows a secret phrase, task asks "what information do you have from the parent?" — child should not know the secret.)
