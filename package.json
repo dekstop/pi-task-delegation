@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@mariozechner/pi-ai": "^0.70.6",
+    "@mariozechner/pi-coding-agent": "^0.70.2",
+    "@types/node": "^26.6.1",
+    "typebox": "^1.1.38",
+    "typescript": "^7.0.2",
     "vitest": "^3.2.4"
   }
 }

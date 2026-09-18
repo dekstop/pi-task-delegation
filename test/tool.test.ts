@@ -1,0 +1,64 @@
+import { describe, expect, it } from "vitest";
+import { mapChildResultToText, runSubagentTask } from "../tool.js";
+import type { ChildResult } from "../executor.js";
+
+describe("mapChildResultToText", () => {
+	it("returns the child's final text on success", () => {
+		const result: ChildResult = { ok: true, output: "All done." };
+		expect(mapChildResultToText(result)).toBe("All done.");
+	});
+
+	it("mentions a retained scratch path on success", () => {
+		const result: ChildResult = { ok: true, output: "Done.", scratchPath: "/tmp/scratch/t1" };
+		expect(mapChildResultToText(result)).toContain("Scratch retained at: /tmp/scratch/t1");
+	});
+
+	it("appends a scratch cleanup failure without obscuring the outcome", () => {
+		const result: ChildResult = { ok: true, output: "Done.", scratchError: "rm failed" };
+		const text = mapChildResultToText(result);
+		expect(text).toContain("Done.");
+		expect(text).toContain("scratch cleanup failed: rm failed");
+	});
+
+	it("falls back to a note when a successful child produced no text", () => {
+		expect(mapChildResultToText({ ok: true, output: "" })).toBe("(no output)");
+	});
+
+	it("returns a useful error on failure", () => {
+		const result: ChildResult = { ok: false, output: "", error: "model exploded" };
+		expect(mapChildResultToText(result)).toBe("Subagent failed: model exploded");
+	});
+
+	it("appends a scratch error on failure without replacing the main error", () => {
+		const result: ChildResult = { ok: false, output: "", error: "boom", scratchError: "mkdir failed" };
+		const text = mapChildResultToText(result);
+		expect(text).toContain("Subagent failed: boom");
+		expect(text).toContain("Scratch error: mkdir failed");
+	});
+});
+
+describe("runSubagentTask (SDK-free paths)", () => {
+	it("surfaces an aborted run as a failure outcome", async () => {
+		const controller = new AbortController();
+		controller.abort();
+		const outcome = await runSubagentTask(
+			{ task: "do a thing" },
+			{ cwd: "/tmp" },
+			{ signal: controller.signal },
+		);
+		expect(outcome.ok).toBe(false);
+		expect(outcome.text).toMatch(/aborted/);
+	});
+
+	it("reports progress via onStatus", async () => {
+		const statuses: string[] = [];
+		const controller = new AbortController();
+		controller.abort();
+		await runSubagentTask(
+			{ task: "do a thing" },
+			{ cwd: "/tmp" },
+			{ signal: controller.signal, onStatus: (s) => statuses.push(s) },
+		);
+		expect(statuses).toContain("done");
+	});
+});
