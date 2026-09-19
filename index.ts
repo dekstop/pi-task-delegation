@@ -12,6 +12,7 @@
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { StringEnum } from "@mariozechner/pi-ai";
+import { Text } from "@mariozechner/pi-tui";
 import { Type } from "typebox";
 import { runDelegateTask } from "./tool.js";
 import type { DelegateToolParams } from "./tool.js";
@@ -44,6 +45,19 @@ export default function (pi: ExtensionAPI) {
 				}),
 			),
 		}),
+		renderCall(args, theme, context) {
+			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+			const task = typeof args?.task === "string" ? args.task : "";
+			const snippet = task.length > 40 ? task.slice(0, 40) + "…" : task;
+			text.setText(theme.fg("toolTitle", theme.bold("Delegate")) + ": " + snippet);
+			return text;
+		},
+		renderResult(result, _options, _theme, context) {
+			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
+			const first = result.content[0];
+			text.setText(first?.type === "text" ? first.text : "");
+			return text;
+		},
 		async execute(_toolCallId, params, signal, onUpdate, ctx) {
 			const toolParams: DelegateToolParams = {
 				task: params.task,

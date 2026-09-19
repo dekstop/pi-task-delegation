@@ -145,7 +145,11 @@ export interface ExecuteOptions {
 	scratchConfig?: ScratchConfig;
 	/** Parent abort signal; propagated to the child session. */
 	signal?: AbortSignal;
-	/** Progress hook. Minimal: "starting" and "done". */
+	/**
+	 * Progress hook: "starting…", then the live transcript (child tool calls
+	 * + assistant text) while the child runs, then "done". Single display
+	 * channel — the parent forwards it verbatim to its TUI.
+	 */
 	onStatus?: (status: string) => void;
 }
 
@@ -200,7 +204,7 @@ export async function executeChildTask(
 	let childCwd = cwd;
 	if (scope === "isolated") {
 		try {
-			scratchPath = await createScratch(taskId, scratchConfig, cwd);
+			scratchPath = await createScratch(taskId, scratchConfig);
 			childCwd = scratchPath;
 		} catch (err) {
 			emit("done");
@@ -211,13 +215,31 @@ export async function executeChildTask(
 	// 3. Delegate framing appended to the default system prompt.
 	const framing = buildDelegateFraming(scope);
 
-	emit("starting");
+	emit("starting…");
 
 	// 4–11.
 	let session: any = null;
 	let abortHandler: (() => void) | null = null;
+	let unsubscribe: (() => void) | null = null;
+	let flushTimer: ReturnType<typeof setTimeout> | null = null;
+	let live = "";
 	let promptError: string | undefined;
 	let messages: AgentMessageLike[] = [];
+
+	// Coalesce transcript updates (~10/s cap) so the TUI isn't flooded per delta.
+	const scheduleFlush = () => {
+		if (flushTimer !== null) return;
+		flushTimer = setTimeout(() => {
+			flushTimer = null;
+			emit(live);
+		}, 100);
+	};
+	const clearFlushTimer = () => {
+		if (flushTimer !== null) {
+			clearTimeout(flushTimer);
+			flushTimer = null;
+		}
+	};
 
 	try {
 		// Deferred so this module loads without the Pi runtime.
@@ -251,12 +273,28 @@ export async function executeChildTask(
 			else signal.addEventListener("abort", abortHandler);
 		}
 
-		// 7. Run the task to completion.
+		// 7a. Live transcript: stream the child's tool calls and assistant
+		//     text through the onStatus channel while the child runs.
+		unsubscribe = session.subscribe((event: any) => {
+			if (event.type === "tool_execution_start") {
+				live += (live ? "\n" : "") + "→ " + event.toolName;
+				scheduleFlush();
+			} else if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
+				live += event.assistantMessageEvent.delta;
+				scheduleFlush();
+			}
+		});
+
+		// 7b. Run the task to completion.
 		try {
 			await session.prompt(task);
 		} catch (err) {
 			promptError = toMessage(err);
 		}
+
+		// 7c. Final flush so the last chunk isn't lost.
+		clearFlushTimer();
+		if (live) emit(live);
 
 		// 8. Snapshot the conversation (for final-message extraction).
 		messages = (session.messages ?? []).slice();
@@ -265,6 +303,8 @@ export async function executeChildTask(
 		return { ok: false, scope, output: "", error: `failed to start child session: ${toMessage(err)}` };
 	} finally {
 		// 11. Always clean up.
+		unsubscribe?.();
+		clearFlushTimer();
 		if (abortHandler && signal) signal.removeEventListener("abort", abortHandler);
 		if (session) {
 			try {
