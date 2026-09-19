@@ -6,8 +6,6 @@
  *
  * Layout:
  *   <cwd>/.pi/delegates/<task-id>/
- *     artifacts/
- *     tmp/
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -56,8 +54,7 @@ export async function createScratch(
 	const baseDir = await resolveBaseDir(config, cwd);
 	const dir = path.join(baseDir, taskId);
 	try {
-		await fs.promises.mkdir(path.join(dir, "artifacts"), { recursive: true });
-		await fs.promises.mkdir(path.join(dir, "tmp"), { recursive: true });
+		await fs.promises.mkdir(dir, { recursive: true });
 	} catch (err) {
 		throw new Error(`Failed to create scratch directory ${dir}: ${toMessage(err)}`);
 	}

@@ -70,7 +70,7 @@ delegate({
 
 ## Scratch storage
 
-Scratch directories are only created for `scope: "isolated"`. Each isolated task gets a directory under `.pi/delegates/<task-id>/` with `artifacts/` and `tmp/` subdirectories.
+Scratch directories are only created for `scope: "isolated"`. Each isolated task gets a directory under `.pi/delegates/<task-id>/`.
 
 | Value | Behaviour |
 |-------|-----------|

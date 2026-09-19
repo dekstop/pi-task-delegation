@@ -23,10 +23,9 @@ afterEach(() => {
 });
 
 describe("scratch lifecycle", () => {
-	it("creates the directory with artifacts/ and tmp/", async () => {
+	it("creates the directory", async () => {
 		const p = await createScratch("t1", cfg());
-		expect(fs.existsSync(path.join(p, "artifacts"))).toBe(true);
-		expect(fs.existsSync(path.join(p, "tmp"))).toBe(true);
+		expect(fs.existsSync(p)).toBe(true);
 
 		const result = await cleanupScratch("t1", cfg());
 		expect(result.ok).toBe(true);
@@ -35,12 +34,12 @@ describe("scratch lifecycle", () => {
 
 	it("retain mode directory survives after the task", async () => {
 		const p = await createScratch("t1", cfg());
-		fs.writeFileSync(path.join(p, "artifacts", "out.txt"), "data");
+		fs.writeFileSync(path.join(p, "out.txt"), "data");
 
 		const retained = await retainScratch("t1", cfg());
 		expect(retained).toBe(p);
 		expect(fs.existsSync(p)).toBe(true);
-		expect(fs.readFileSync(path.join(p, "artifacts", "out.txt"), "utf8")).toBe("data");
+		expect(fs.readFileSync(path.join(p, "out.txt"), "utf8")).toBe("data");
 	});
 
 	it("each task gets an isolated directory", async () => {
@@ -48,8 +47,8 @@ describe("scratch lifecycle", () => {
 		const b = await createScratch("b", cfg());
 		expect(a).not.toBe(b);
 
-		fs.writeFileSync(path.join(a, "tmp", "note.txt"), "a");
-		expect(fs.readdirSync(path.join(b, "tmp"))).toEqual([]);
+		fs.writeFileSync(path.join(a, "note.txt"), "a");
+		expect(fs.readdirSync(b)).toEqual([]);
 	});
 
 	it("scratch is outside the project working directory", async () => {
@@ -64,7 +63,7 @@ describe("scratch lifecycle", () => {
 			return;
 		}
 		const p = await createScratch("t1", cfg());
-		fs.writeFileSync(path.join(p, "tmp", "f.txt"), "x");
+		fs.writeFileSync(path.join(p, "f.txt"), "x");
 		fs.chmodSync(p, 0o555); // read+execute, no write: unlink of children fails
 
 		const result = await cleanupScratch("t1", cfg());

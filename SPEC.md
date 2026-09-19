@@ -480,8 +480,6 @@ The extension should own a dedicated location, conceptually:
 ~/.pi/agent/delegates/<task-id>/
     metadata.json
     task.md
-    artifacts/
-    tmp/
 ```
 
 The exact location should follow Pi's established conventions where possible.
