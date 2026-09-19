@@ -25,7 +25,7 @@ async function resolveBaseDir(config?: ScratchConfig, cwd?: string): Promise<str
 	if (config?.scratchBaseDir) {
 		return config.scratchBaseDir;
 	}
-	return path.join(cwd ?? ".", "delegates");
+	return path.join(cwd ?? ".", ".pi", "delegates");
 }
 
 /** A task id must be a single path segment — no separators, no traversal. */
