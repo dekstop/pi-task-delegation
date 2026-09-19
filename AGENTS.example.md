@@ -2,7 +2,7 @@
 
 ## Delegate self-contained tasks
 
-When the work is isolated and does not need the parent agent's conversation history, delegate it to a fresh child session using the `delegate` tool:
+If an agent working on this project needs to perform isolated work that does not require the parent agent's conversation history, it should delegate the task to a fresh child session using the `delegate` tool:
 
 ```ts
 delegate({
