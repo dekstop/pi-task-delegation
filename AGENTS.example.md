@@ -26,10 +26,3 @@ The `scratch` parameter controls the lifecycle of the isolated scratch directory
 
 The `scratch` parameter is ignored for `scope: "project"`.
 
-## Gitignore
-
-If you use `scratch: "retain"`, add the scratch directory to your project's `.gitignore` to avoid committing intermediate files:
-
-```text
-.pi/delegates/
-```

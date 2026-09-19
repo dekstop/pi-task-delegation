@@ -1,17 +1,18 @@
 /**
  * Scratch directory lifecycle manager.
  *
- * Each delegated task gets an isolated scratch directory inside the project
- * under `.pi/delegates/<task-id>/`. Scratch storage is always project-local.
+ * Each delegated task gets an isolated scratch directory under the system
+ * temporary directory: `os.tmpdir()/pi-delegates/<task-id>/`.
  *
  * Layout:
- *   <cwd>/.pi/delegates/<task-id>/
+ *   <tmpdir>/pi-delegates/<task-id>/
  */
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 
 export interface ScratchConfig {
-	/** Base directory for scratch storage. Default: <cwd>/.pi/delegates. */
+	/** Base directory for scratch storage. Default: os.tmpdir()/pi-delegates. */
 	scratchBaseDir?: string;
 }
 
@@ -19,11 +20,11 @@ export interface ScratchConfig {
  * Resolve the scratch base directory. Tests always pass an explicit
  * `scratchBaseDir` override.
  */
-async function resolveBaseDir(config?: ScratchConfig, cwd?: string): Promise<string> {
+async function resolveBaseDir(config?: ScratchConfig): Promise<string> {
 	if (config?.scratchBaseDir) {
 		return config.scratchBaseDir;
 	}
-	return path.join(cwd ?? ".", ".pi", "delegates");
+	return path.join(os.tmpdir(), "pi-delegates");
 }
 
 /** A task id must be a single path segment — no separators, no traversal. */
@@ -48,10 +49,9 @@ function toMessage(err: unknown): string {
 export async function createScratch(
 	taskId: string,
 	config?: ScratchConfig,
-	cwd?: string,
 ): Promise<string> {
 	assertTaskId(taskId);
-	const baseDir = await resolveBaseDir(config, cwd);
+	const baseDir = await resolveBaseDir(config);
 	const dir = path.join(baseDir, taskId);
 	try {
 		await fs.promises.mkdir(dir, { recursive: true });
@@ -75,11 +75,10 @@ export interface CleanupResult {
 export async function cleanupScratch(
 	taskId: string,
 	config?: ScratchConfig,
-	cwd?: string,
 ): Promise<CleanupResult> {
 	try {
 		assertTaskId(taskId);
-		const baseDir = await resolveBaseDir(config, cwd);
+		const baseDir = await resolveBaseDir(config);
 		const dir = path.join(baseDir, taskId);
 		await fs.promises.rm(dir, { recursive: true, force: true });
 		return { ok: true };
@@ -96,10 +95,9 @@ export async function cleanupScratch(
 export async function retainScratch(
 	taskId: string,
 	config?: ScratchConfig,
-	cwd?: string,
 ): Promise<string | null> {
 	assertTaskId(taskId);
-	const baseDir = await resolveBaseDir(config, cwd);
+	const baseDir = await resolveBaseDir(config);
 	const dir = path.join(baseDir, taskId);
 	try {
 		await fs.promises.access(dir);

@@ -11,7 +11,7 @@ Read `README.md` to get up to speed with the current project.
 - Tests in `test/` directory, run with `npx vitest run`
 - The extension is loaded by Pi via jiti — no build step
 - `@mariozechner/pi-coding-agent` and `typebox` are provided by Pi at runtime, not installed locally
-- Scratch storage: project-local under `<cwd>/.pi/delegates/<task-id>/`, gitignored
+- Scratch storage: system tmp under `os.tmpdir()/pi-delegates/<task-id>/`
 - The child session must NOT receive the `delegate` tool (no recursive delegation in Phase 1)
 - Use `createAgentSession()` with `SessionManager.inMemory()` for child sessions
 - Child uses the same `cwd` as the parent (same project environment, fresh context)

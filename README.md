@@ -70,7 +70,7 @@ delegate({
 
 ## Scratch storage
 
-Scratch directories are only created for `scope: "isolated"`. Each isolated task gets a directory under `.pi/delegates/<task-id>/`.
+Scratch directories are only created for `scope: "isolated"`. Each isolated task gets a directory under `os.tmpdir()/pi-delegates/<task-id>/`.
 
 | Value | Behaviour |
 |-------|-----------|
@@ -78,12 +78,6 @@ Scratch directories are only created for `scope: "isolated"`. Each isolated task
 | `retain` | Created, retained after execution. The result identifies the path. |
 
 ## Setup
-
-Add the scratch directory to your project's `.gitignore` to avoid committing intermediate files:
-
-```text
-.pi/delegates/
-```
 
 Copy the contents of `AGENTS.example.md` into your project's `AGENTS.md` to advertise delegates and scratch storage to any agents used on the project.
 
