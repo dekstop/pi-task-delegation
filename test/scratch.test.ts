@@ -23,45 +23,38 @@ afterEach(() => {
 });
 
 describe("scratch lifecycle", () => {
-	it("none mode creates no directory", async () => {
-		const p = await createScratch("t1", "none", cfg());
-		expect(p).toBeNull();
-		expect(fs.existsSync(path.join(baseDir, "t1"))).toBe(false);
-	});
-
-	it("ephemeral mode creates the directory with artifacts/ and tmp/", async () => {
-		const p = await createScratch("t1", "ephemeral", cfg());
-		expect(p).not.toBeNull();
-		expect(fs.existsSync(path.join(p!, "artifacts"))).toBe(true);
-		expect(fs.existsSync(path.join(p!, "tmp"))).toBe(true);
+	it("creates the directory with artifacts/ and tmp/", async () => {
+		const p = await createScratch("t1", cfg());
+		expect(fs.existsSync(path.join(p, "artifacts"))).toBe(true);
+		expect(fs.existsSync(path.join(p, "tmp"))).toBe(true);
 
 		const result = await cleanupScratch("t1", cfg());
 		expect(result.ok).toBe(true);
-		expect(fs.existsSync(p!)).toBe(false);
+		expect(fs.existsSync(p)).toBe(false);
 	});
 
 	it("retain mode directory survives after the task", async () => {
-		const p = await createScratch("t1", "retain", cfg());
-		fs.writeFileSync(path.join(p!, "artifacts", "out.txt"), "data");
+		const p = await createScratch("t1", cfg());
+		fs.writeFileSync(path.join(p, "artifacts", "out.txt"), "data");
 
 		const retained = await retainScratch("t1", cfg());
 		expect(retained).toBe(p);
-		expect(fs.existsSync(p!)).toBe(true);
-		expect(fs.readFileSync(path.join(p!, "artifacts", "out.txt"), "utf8")).toBe("data");
+		expect(fs.existsSync(p)).toBe(true);
+		expect(fs.readFileSync(path.join(p, "artifacts", "out.txt"), "utf8")).toBe("data");
 	});
 
 	it("each task gets an isolated directory", async () => {
-		const a = await createScratch("a", "ephemeral", cfg());
-		const b = await createScratch("b", "ephemeral", cfg());
+		const a = await createScratch("a", cfg());
+		const b = await createScratch("b", cfg());
 		expect(a).not.toBe(b);
 
-		fs.writeFileSync(path.join(a!, "tmp", "note.txt"), "a");
-		expect(fs.readdirSync(path.join(b!, "tmp"))).toEqual([]);
+		fs.writeFileSync(path.join(a, "tmp", "note.txt"), "a");
+		expect(fs.readdirSync(path.join(b, "tmp"))).toEqual([]);
 	});
 
 	it("scratch is outside the project working directory", async () => {
-		const p = await createScratch("t1", "ephemeral", cfg());
-		expect(p!.startsWith(baseDir)).toBe(true);
+		const p = await createScratch("t1", cfg());
+		expect(p.startsWith(baseDir)).toBe(true);
 		expect(baseDir.startsWith(process.cwd() + path.sep)).toBe(false);
 	});
 
@@ -70,16 +63,16 @@ describe("scratch lifecycle", () => {
 			// root bypasses permission checks; nothing to simulate.
 			return;
 		}
-		const p = await createScratch("t1", "ephemeral", cfg());
-		fs.writeFileSync(path.join(p!, "tmp", "f.txt"), "x");
-		fs.chmodSync(p!, 0o555); // read+execute, no write: unlink of children fails
+		const p = await createScratch("t1", cfg());
+		fs.writeFileSync(path.join(p, "tmp", "f.txt"), "x");
+		fs.chmodSync(p, 0o555); // read+execute, no write: unlink of children fails
 
 		const result = await cleanupScratch("t1", cfg());
 		expect(result.ok).toBe(false);
 		expect(result.error).toBeTruthy();
 
-		fs.chmodSync(p!, 0o755);
-		fs.rmSync(p!, { recursive: true, force: true });
+		fs.chmodSync(p, 0o755);
+		fs.rmSync(p, { recursive: true, force: true });
 	});
 
 	it("cleanup of a missing directory is ok", async () => {
@@ -92,7 +85,7 @@ describe("scratch lifecycle", () => {
 	});
 
 	it("rejects unsafe task ids", async () => {
-		await expect(createScratch("../evil", "ephemeral", cfg())).rejects.toThrow();
+		await expect(createScratch("../evil", cfg())).rejects.toThrow();
 		const result = await cleanupScratch("..", cfg());
 		expect(result.ok).toBe(false);
 	});

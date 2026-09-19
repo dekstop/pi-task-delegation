@@ -12,8 +12,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-export type ScratchMode = "none" | "ephemeral" | "retain";
-
 export interface ScratchConfig {
 	/** Base directory for scratch storage. Default: <cwd>/.pi/delegates. */
 	scratchBaseDir?: string;
@@ -47,18 +45,13 @@ function toMessage(err: unknown): string {
 /**
  * Create the scratch directory for a task.
  *
- * Returns the scratch path, or null when scratch is disabled
- * (`mode === "none"`). Throws a clear error when directory creation fails.
+ * Returns the scratch path. Throws a clear error when directory creation fails.
  */
 export async function createScratch(
 	taskId: string,
-	mode: ScratchMode,
 	config?: ScratchConfig,
 	cwd?: string,
-): Promise<string | null> {
-	if (mode === "none") {
-		return null;
-	}
+): Promise<string> {
 	assertTaskId(taskId);
 	const baseDir = await resolveBaseDir(config, cwd);
 	const dir = path.join(baseDir, taskId);

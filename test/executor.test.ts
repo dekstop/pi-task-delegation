@@ -11,22 +11,24 @@ import {
 } from "../executor.js";
 
 describe("buildDelegateFraming", () => {
-	it("frames the child as an isolated delegate with an authoritative task", () => {
-		const framing = buildDelegateFraming();
+	it("frames the child as a delegate with an authoritative task", () => {
+		const framing = buildDelegateFraming("project");
 		expect(framing).toMatch(/delegate/i);
 		expect(framing).toMatch(/fresh/i);
 		expect(framing).toMatch(/authoritative/i);
 		expect(framing).toMatch(/concise/i);
 	});
 
-	it("omits the scratch line when no scratch path is given", () => {
-		expect(buildDelegateFraming()).not.toMatch(/scratch directory/i);
-		expect(buildDelegateFraming(null)).not.toMatch(/scratch directory/i);
+	it("omits isolated-scope instructions for project scope", () => {
+		const framing = buildDelegateFraming("project");
+		expect(framing).not.toMatch(/isolated directory/i);
+		expect(framing).not.toMatch(/no access to the project/i);
 	});
 
-	it("includes the scratch path when one is given", () => {
-		const framing = buildDelegateFraming("/tmp/scratch/t1");
-		expect(framing).toMatch(/scratch directory is \/tmp\/scratch\/t1/);
+	it("includes isolated-scope instructions for isolated scope", () => {
+		const framing = buildDelegateFraming("isolated");
+		expect(framing).toMatch(/isolated directory/i);
+		expect(framing).toMatch(/no access to the project/i);
 	});
 });
 
@@ -113,8 +115,7 @@ describe("classifyOutcome", () => {
 		const r = classifyOutcome({
 			lastAssistant: { role: "assistant", content: [], stopReason: "aborted" },
 		});
-		expect(r.ok).toBe(false);
-		expect(r.stopReason).toBe("aborted");
+		expect(r).toEqual({ ok: false, stopReason: "aborted", error: "aborted" });
 	});
 
 	it("treats stopReason 'length' as success (truncated)", () => {
@@ -149,24 +150,41 @@ describe("executeChildTask (SDK-free paths)", () => {
 		const result = await executeChildTask("task", {
 			taskId: "t1",
 			cwd: "/tmp",
+			scope: "project",
 			signal: controller.signal,
 		});
 		expect(result.ok).toBe(false);
 		expect(result.error).toBe("aborted");
 		expect(result.stopReason).toBe("aborted");
+		expect(result.scope).toBe("project");
 	});
 
-	it("returns a useful error when scratch creation fails", async () => {
+	it("returns aborted with isolated scope", async () => {
+		const controller = new AbortController();
+		controller.abort();
+		const result = await executeChildTask("task", {
+			taskId: "t1",
+			cwd: "/tmp",
+			scope: "isolated",
+			signal: controller.signal,
+		});
+		expect(result.ok).toBe(false);
+		expect(result.error).toBe("aborted");
+		expect(result.scope).toBe("isolated");
+	});
+
+	it("returns a useful error when scratch creation fails (isolated scope)", async () => {
 		const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), "exec-scratch-"));
 		try {
 			const result = await executeChildTask("task", {
 				taskId: "../evil",
 				cwd: "/tmp",
-				scratchMode: "ephemeral",
+				scope: "isolated",
 				scratchConfig: { scratchBaseDir: baseDir },
 			});
 			expect(result.ok).toBe(false);
 			expect(result.error).toBeTruthy();
+			expect(result.scope).toBe("isolated");
 		} finally {
 			fs.rmSync(baseDir, { recursive: true, force: true });
 		}
@@ -179,6 +197,7 @@ describe("executeChildTask (SDK-free paths)", () => {
 		await executeChildTask("task", {
 			taskId: "t1",
 			cwd: "/tmp",
+			scope: "project",
 			signal: controller.signal,
 			onStatus: (s) => statuses.push(s),
 		});

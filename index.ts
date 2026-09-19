@@ -14,6 +14,7 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { StringEnum } from "@mariozechner/pi-ai";
 import { Type } from "typebox";
 import { runDelegateTask } from "./tool.js";
+import type { DelegateToolParams } from "./tool.js";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerTool({
@@ -30,16 +31,27 @@ export default function (pi: ExtensionAPI) {
 		],
 		parameters: Type.Object({
 			task: Type.String({ description: "The task to delegate, in natural language." }),
-			scratch: Type.Optional(
-				StringEnum(["none", "ephemeral", "retain"] as const, {
+			scope: Type.Optional(
+				StringEnum(["project", "isolated"] as const, {
 					description:
-						"Scratch storage: none (default, no scratch dir), ephemeral (created then cleaned up), retain (kept after the task).",
+						"Execution scope. 'project' (default): child works in the project directory. 'isolated': child works in a fresh, isolated directory with no project access.",
+				}),
+			),
+			scratch: Type.Optional(
+				StringEnum(["ephemeral", "retain"] as const, {
+					description:
+						"Scratch lifecycle for isolated scope. 'ephemeral' (default): scratch removed after the task. 'retain': scratch kept after the task. Ignored for project scope.",
 				}),
 			),
 		}),
 		async execute(_toolCallId, params, signal, onUpdate, ctx) {
+			const toolParams: DelegateToolParams = {
+				task: params.task,
+				scope: params.scope,
+				scratch: params.scratch,
+			};
 			const outcome = await runDelegateTask(
-				{ task: params.task, scratch: params.scratch },
+				toolParams,
 				{ cwd: ctx.cwd },
 				{
 					signal,

@@ -7,17 +7,24 @@ When the work is isolated and does not need the parent agent's conversation hist
 ```ts
 delegate({
   task: "Investigate why the test suite is failing.",
-  scratch: "ephemeral"  // optional: "none" | "ephemeral" | "retain"
+  scope: "project"       // optional: "project" (default) | "isolated"
+  scratch: "ephemeral"   // optional: "ephemeral" (default) | "retain" — isolated scope only
 })
 ```
 
-## Use scratch for intermediate files
+## Execution scopes
 
-If the delegated task produces intermediate files (artifacts, build output, logs), enable scratch storage so the child has a writable workspace:
+- **`project`** (default) — the child works in the project working directory, with access to project files. No scratch directory is created.
+- **`isolated`** — the child works in a fresh, isolated scratch directory with no access to project files. Use this when the task should not read or modify project files.
 
-- **`none`** (default) — no scratch directory.
-- **`ephemeral`** — scratch created and removed after the task finishes (success, failure, or cancellation).
+## Scratch lifecycle (isolated scope only)
+
+The `scratch` parameter controls the lifecycle of the isolated scratch directory:
+
+- **`ephemeral`** (default) — scratch created and removed after the task finishes (success, failure, or cancellation).
 - **`retain`** — scratch created and kept after execution; the result message identifies the path.
+
+The `scratch` parameter is ignored for `scope: "project"`.
 
 ## Gitignore
 

@@ -3,9 +3,14 @@
  *
  * Runs a delegated task in a fresh, in-process child AgentSession with a
  * clean context (no parent history). The child receives the explicit task
- * text, the project working directory, and the normal Pi tools
- * (read, bash, edit, write) — but never the `delegate` tool (no recursive
- * delegation). The child uses the default model (no model selection).
+ * text and the normal Pi tools (read, bash, edit, write) — but never the
+ * `delegate` tool (no recursive delegation). The child uses the default
+ * model (no model selection).
+ *
+ * Two execution scopes:
+ *   - "project" (default): child works in the project cwd, no scratch dir.
+ *   - "isolated": child works in a fresh scratch directory (scratch = cwd),
+ *     no access to project files.
  *
  * The Pi SDK is imported lazily inside executeChildTask so this module (and
  * its pure helpers) load in tests without the Pi runtime.
@@ -15,7 +20,6 @@ import {
 	createScratch,
 	retainScratch,
 	type ScratchConfig,
-	type ScratchMode,
 } from "./scratch.js";
 
 /**
@@ -37,17 +41,18 @@ function toMessage(err: unknown): string {
 /**
  * Build the delegate framing appended to the child's default system prompt.
  * Keeps the full default prompt (tools, guidelines, project context) and
- * appends the delegate instructions plus, when enabled, the scratch path.
+ * appends the delegate instructions plus, for isolated scope, a note that
+ * the child is working in an isolated directory with no project access.
  */
-export function buildDelegateFraming(scratchPath?: string | null): string {
+export function buildDelegateFraming(scope: "project" | "isolated"): string {
 	const lines = [
 		"You are a delegate. You have a fresh, isolated context: you do NOT share the parent agent's conversation history.",
 		"The task given to you is authoritative. Do the work needed to complete it using your tools.",
 		"Keep your final answer concise: state the result, not a transcript of your steps.",
 	];
-	if (scratchPath) {
+	if (scope === "isolated") {
 		lines.push(
-			`Your scratch directory is ${scratchPath}. Use it for intermediate files; it lives outside the project.`,
+			"You are working in an isolated directory with no access to the project files. Use your working directory for any intermediate files.",
 		);
 	}
 	return lines.join("\n");
@@ -122,12 +127,21 @@ export function classifyOutcome(input: ClassifyInput): ClassifyResult {
 export interface ExecuteOptions {
 	/** Single path segment; the scratch directory key. */
 	taskId: string;
-	/** Parent working directory — the child shares the project environment. */
+	/** Parent working directory. */
 	cwd: string;
 	/** Global config directory. Default: getAgentDir(). */
 	agentDir?: string;
-	/** Scratch lifecycle. Default: "none". */
-	scratchMode?: ScratchMode;
+	/**
+	 * Execution scope. "project" (default): child works in the project cwd,
+	 * no scratch dir. "isolated": child works in a fresh scratch directory
+	 * (scratch = cwd), no project access.
+	 */
+	scope: "project" | "isolated";
+	/**
+	 * Scratch lifecycle for isolated scope. "ephemeral" (default): dir
+	 * removed after the task. "retain": dir kept. Ignored for project scope.
+	 */
+	scratchLifecycle?: "ephemeral" | "retain";
 	scratchConfig?: ScratchConfig;
 	/** Parent abort signal; propagated to the child session. */
 	signal?: AbortSignal;
@@ -137,13 +151,15 @@ export interface ExecuteOptions {
 
 export interface ChildResult {
 	ok: boolean;
+	/** The scope that was used. */
+	scope: "project" | "isolated";
 	/** Final assistant text ("" on failure). */
 	output: string;
 	/** Useful message on failure. */
 	error?: string;
 	/** Child's final stopReason (diagnostics). */
 	stopReason?: string;
-	/** Retained scratch path (retain mode). */
+	/** Retained scratch path (isolated + retain only). */
 	scratchPath?: string;
 	/** Scratch cleanup failure message. */
 	scratchError?: string;
@@ -162,7 +178,8 @@ export async function executeChildTask(
 		taskId,
 		cwd,
 		agentDir,
-		scratchMode = "none",
+		scope = "project",
+		scratchLifecycle = "ephemeral",
 		scratchConfig,
 		signal,
 		onStatus,
@@ -175,20 +192,24 @@ export async function executeChildTask(
 	// 1. Already aborted — don't start.
 	if (signal?.aborted) {
 		emit("done");
-		return { ok: false, output: "", error: "aborted", stopReason: "aborted" };
+		return { ok: false, scope, output: "", error: "aborted", stopReason: "aborted" };
 	}
 
-	// 2. Scratch directory.
+	// 2. Scratch directory (isolated scope only).
 	let scratchPath: string | null = null;
-	try {
-		scratchPath = await createScratch(taskId, scratchMode, scratchConfig);
-	} catch (err) {
-		emit("done");
-		return { ok: false, output: "", error: toMessage(err) };
+	let childCwd = cwd;
+	if (scope === "isolated") {
+		try {
+			scratchPath = await createScratch(taskId, scratchConfig, cwd);
+			childCwd = scratchPath;
+		} catch (err) {
+			emit("done");
+			return { ok: false, scope, output: "", error: toMessage(err) };
+		}
 	}
 
 	// 3. Delegate framing appended to the default system prompt.
-	const framing = buildDelegateFraming(scratchPath);
+	const framing = buildDelegateFraming(scope);
 
 	emit("starting");
 
@@ -205,18 +226,18 @@ export async function executeChildTask(
 
 		// 4. Resource loader with the appended delegate framing.
 		const loader = new DefaultResourceLoader({
-			cwd,
+			cwd: childCwd,
 			agentDir: agentDir ?? getAgentDir(),
 			appendSystemPromptOverride: (base: string[]) => [...base, framing],
 		});
 		await loader.reload();
 
-		// 5. Fresh in-process child session: clean context, project cwd,
+		// 5. Fresh in-process child session: clean context, child cwd,
 		//    normal tools, never `delegate`.
 		const created = await createAgentSession({
 			resourceLoader: loader,
 			sessionManager: SessionManager.inMemory(),
-			cwd,
+			cwd: childCwd,
 			tools: ["read", "bash", "edit", "write"],
 		});
 		session = created.session;
@@ -241,7 +262,7 @@ export async function executeChildTask(
 		messages = (session.messages ?? []).slice();
 	} catch (err) {
 		emit("done");
-		return { ok: false, output: "", error: `failed to start child session: ${toMessage(err)}` };
+		return { ok: false, scope, output: "", error: `failed to start child session: ${toMessage(err)}` };
 	} finally {
 		// 11. Always clean up.
 		if (abortHandler && signal) signal.removeEventListener("abort", abortHandler);
@@ -267,6 +288,7 @@ export async function executeChildTask(
 		emit("done");
 		return {
 			ok: false,
+			scope,
 			output: "",
 			error: classified.error,
 			stopReason: classified.stopReason,
@@ -275,20 +297,23 @@ export async function executeChildTask(
 
 	const output = extractFinalAssistantText(messages);
 
-	// 10. Scratch lifecycle.
+	// 10. Scratch lifecycle (isolated scope only).
 	let scratchResultPath: string | undefined;
 	let scratchError: string | undefined;
-	if (scratchMode === "ephemeral") {
-		const cleanup = await cleanupScratch(taskId, scratchConfig);
-		if (!cleanup.ok) scratchError = cleanup.error;
-	} else if (scratchMode === "retain") {
-		const retained = await retainScratch(taskId, scratchConfig);
-		scratchResultPath = retained ?? scratchPath ?? undefined;
+	if (scope === "isolated") {
+		if (scratchLifecycle === "ephemeral") {
+			const cleanup = await cleanupScratch(taskId, scratchConfig);
+			if (!cleanup.ok) scratchError = cleanup.error;
+		} else if (scratchLifecycle === "retain") {
+			const retained = await retainScratch(taskId, scratchConfig);
+			scratchResultPath = retained ?? scratchPath ?? undefined;
+		}
 	}
 
 	emit("done");
 	return {
 		ok: true,
+		scope,
 		output,
 		scratchPath: scratchResultPath,
 		scratchError,

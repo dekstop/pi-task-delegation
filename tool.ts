@@ -13,8 +13,13 @@ import { executeChildTask, type ChildResult } from "./executor.js";
 export interface DelegateToolParams {
 	/** Natural-language task description (required). */
 	task: string;
-	/** Scratch lifecycle. Default: "none". */
-	scratch?: "none" | "ephemeral" | "retain";
+	/** Execution scope. Default: "project". */
+	scope?: "project" | "isolated";
+	/**
+	 * Scratch lifecycle for isolated scope. Default: "ephemeral".
+	 * Ignored for project scope.
+	 */
+	scratch?: "ephemeral" | "retain";
 }
 
 /** The slice of the tool execution context the tool needs. */
@@ -76,10 +81,12 @@ export async function runDelegateTask(
 	ctx: ToolContext,
 	options: RunOptions = {},
 ): Promise<ToolOutcome> {
+	const scope = params.scope ?? "project";
 	const result = await executeChildTask(params.task, {
 		taskId: randomUUID(),
 		cwd: ctx.cwd,
-		scratchMode: params.scratch ?? "none",
+		scope,
+		scratchLifecycle: scope === "isolated" ? (params.scratch ?? "ephemeral") : undefined,
 		signal: options.signal,
 		onStatus: options.onStatus,
 	});
