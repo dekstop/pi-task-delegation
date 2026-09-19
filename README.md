@@ -72,6 +72,8 @@ Add the scratch directory to your project's `.gitignore` to avoid committing int
 .pi/delegates/
 ```
 
+See `AGENTS.example.md` for tips on using delegates and scratch storage.
+
 ## Status
 
 ✅ **Phase 1 complete** — core delegation, scratch storage, error handling, and cancellation.
