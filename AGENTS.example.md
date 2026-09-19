@@ -1,8 +1,8 @@
-# Example: using delegates
+# Using delegates
 
 ## Delegate self-contained tasks
 
-When the work is isolated and does not need the parent's conversation history, delegate it to a fresh child session:
+When the work is isolated and does not need the parent agent's conversation history, delegate it to a fresh child session using the `delegate` tool:
 
 ```ts
 delegate({
