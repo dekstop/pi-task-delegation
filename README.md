@@ -24,17 +24,23 @@ The child does **not** inherit the parent's conversation history. The parent is 
 
 ## Installation
 
-*(Placeholder — will be updated once implemented)*
+Install locally (project-scoped) via the Pi CLI:
 
-1. Clone this repository.
-2. Symlink or reference the extension directory in your Pi settings under `~/.pi/agent/extensions/` or `.pi/extensions/`.
-3. Restart Pi or use `/reload`.
+```bash
+pi install . -l
+```
+
+Or install globally:
+
+```bash
+pi install ./local/path
+```
+
+Verify with `pi list`.
 
 ## Usage
 
-*(Placeholder — will be updated once implemented)*
-
-The extension registers a `subagent` tool. The parent agent can call it with:
+The extension registers a `subagent` tool. The parent agent calls it with:
 
 ```ts
 subagent({
@@ -60,4 +66,6 @@ Optional scratch directories are created outside the project directory under `~/
 
 ## Status
 
-Phase 1 — under development. See `SPEC.md` for the full specification and `ROADMAP.md` for future phases.
+✅ **Phase 1 complete** — core delegation, scratch storage, error handling, and cancellation.
+
+See `SPEC.md` for the full specification and `ROADMAP.md` for future phases.
