@@ -72,7 +72,7 @@ Add the scratch directory to your project's `.gitignore` to avoid committing int
 .pi/delegates/
 ```
 
-Copy the contents of `AGENTS.example.md` into your project's `AGENTS.md` to advertise delegates and scratch storage to child agents.
+Copy the contents of `AGENTS.example.md` into your project's `AGENTS.md` to advertise delegates and scratch storage to any agents used on the project.
 
 ## Status
 
