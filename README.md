@@ -83,4 +83,4 @@ Copy the contents of `AGENTS.example.md` into your project's `AGENTS.md` to adve
 
 ## Status
 
-✅ **Phase 1 complete** — core delegation, isolated scope, scratch storage, error handling, and cancellation.
+✅ Current — core delegation, isolated scope, scratch storage, error handling, and cancellation.
