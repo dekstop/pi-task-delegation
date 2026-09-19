@@ -2,7 +2,8 @@
 
 Write tests for core delegation behaviour and context isolation.
 
-**Note (from T-003):** Real child-session tests need `@mariozechner/pi-coding-agent`, which is NOT installed locally (Pi provides it at runtime) — plain `npx vitest run` can't resolve it. So integration tests must `await import(...)` and `describe.skipIf` when unavailable: keeps the local suite green (skipped) and runs where the SDK is present. Pure-helper coverage already lives in `test/executor.test.ts`.
+**Note (from T-003; UPDATED after T-004):** The SDK is now installed locally as a devDependency (pinned to the installed Pi's runtime versions) and resolvable by node/vitest — verified: `import('@mariozechner/pi-coding-agent')` works and exports `createAgentSession`/`SessionManager`/`DefaultResourceLoader`/`getAgentDir`. The old "can't resolve the module" constraint is GONE, so the module-unavailability `skipIf` guard is no longer needed.
+**Unknown (verify before writing):** whether actually *executing* a child session in a test (`createAgentSession` + `session.prompt(task)`) works in the local/CI env, or needs a live model/provider/API key that may be absent — no real child-session test has been run yet. So guard integration tests on **model/provider availability** (skip if no model configured), not module availability — and confirm with one real run first. Pure-helper coverage already lives in `test/executor.test.ts`.
 
 **Scope:**
 - Basic delegation: parent invokes `subagent`, child session is created, child receives the task, child executes, parent receives the final result.

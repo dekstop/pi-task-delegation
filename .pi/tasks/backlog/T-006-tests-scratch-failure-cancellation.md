@@ -2,7 +2,7 @@
 
 Write tests for scratch lifecycle, failure handling, and cancellation.
 
-**Note (from T-003):** Same SDK constraint as T-005 — `@mariozechner/pi-coding-agent` isn't installed locally, so integration tests must `await import(...)` and `describe.skipIf` when unavailable. The cancellation path is already implemented in the executor: `signal` (3rd tool `execute` arg) → `executeChildTask.signal` → `session.abort()`, with `dispose()` in `finally` and ephemeral scratch cleaned.
+**Note (from T-003; UPDATED after T-004):** Same as T-005 — the SDK is now installed locally (devDependency) and resolvable, so the module-unavailability constraint is GONE. **Unknown (verify before writing):** whether executing a child session in a test needs a live model/provider; guard integration tests on model/provider availability, not module availability. The cancellation path is already implemented in the executor: `signal` (3rd tool `execute` arg) → `executeChildTask.signal` → `session.abort()`, with `dispose()` in `finally` and ephemeral scratch cleaned.
 
 **Scope:**
 - Scratch:
