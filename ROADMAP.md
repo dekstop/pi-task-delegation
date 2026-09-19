@@ -85,7 +85,7 @@ The goal is context isolation rather than agent specialisation.
 * model swapping;
 * KV-cache management;
 * persistent context snapshots;
-* parallel subagents;
+* parallel delegates;
 * agent roles;
 * persistent child state.
 
@@ -599,7 +599,7 @@ This distinction becomes increasingly important if multiple Pi sessions exist.
 If Phase 3 is implemented, the public API could eventually allow something like:
 
 ```ts
-subagent({
+delegate({
   task: "...",
   model: "model-b"
 })
@@ -870,7 +870,7 @@ The user should not have to understand:
 The fundamental operation remains:
 
 ```text
-subagent(task)
+delegate(task)
 ```
 
 The runtime should optimise that operation underneath.

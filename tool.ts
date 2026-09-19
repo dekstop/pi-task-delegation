@@ -1,5 +1,5 @@
 /**
- * Subagent tool logic — pure, SDK-free at load time.
+ * Delegate tool logic — pure, SDK-free at load time.
  *
  * Kept separate from index.ts so it loads in tests without the Pi runtime
  * (index.ts imports typebox / @mariozechner/pi-ai, which are provided by Pi
@@ -10,7 +10,7 @@ import { randomUUID } from "node:crypto";
 import { executeChildTask, type ChildResult } from "./executor.js";
 
 /** Validated tool parameters. */
-export interface SubagentToolParams {
+export interface DelegateToolParams {
 	/** Natural-language task description (required). */
 	task: string;
 	/** Scratch lifecycle. Default: "none". */
@@ -51,7 +51,7 @@ export function mapChildResultToText(result: ChildResult): string {
 		return lines.length > 0 ? lines.join("\n") : "(no output)";
 	}
 
-	const parts: string[] = [`Subagent failed: ${result.error ?? "unknown error"}`];
+	const parts: string[] = [`Delegate failed: ${result.error ?? "unknown error"}`];
 	if (result.scratchError) {
 		parts.push(`Scratch error: ${result.scratchError}`);
 	}
@@ -71,8 +71,8 @@ export interface RunOptions {
  * the ToolOutcome so the caller (index.ts) can surface them via a thrown
  * error (which is how the SDK sets isError).
  */
-export async function runSubagentTask(
-	params: SubagentToolParams,
+export async function runDelegateTask(
+	params: DelegateToolParams,
 	ctx: ToolContext,
 	options: RunOptions = {},
 ): Promise<ToolOutcome> {

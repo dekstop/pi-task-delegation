@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapChildResultToText, runSubagentTask } from "../tool.js";
+import { mapChildResultToText, runDelegateTask } from "../tool.js";
 import type { ChildResult } from "../executor.js";
 
 describe("mapChildResultToText", () => {
@@ -26,22 +26,22 @@ describe("mapChildResultToText", () => {
 
 	it("returns a useful error on failure", () => {
 		const result: ChildResult = { ok: false, output: "", error: "model exploded" };
-		expect(mapChildResultToText(result)).toBe("Subagent failed: model exploded");
+		expect(mapChildResultToText(result)).toBe("Delegate failed: model exploded");
 	});
 
 	it("appends a scratch error on failure without replacing the main error", () => {
 		const result: ChildResult = { ok: false, output: "", error: "boom", scratchError: "mkdir failed" };
 		const text = mapChildResultToText(result);
-		expect(text).toContain("Subagent failed: boom");
+		expect(text).toContain("Delegate failed: boom");
 		expect(text).toContain("Scratch error: mkdir failed");
 	});
 });
 
-describe("runSubagentTask (SDK-free paths)", () => {
+describe("runDelegateTask (SDK-free paths)", () => {
 	it("surfaces an aborted run as a failure outcome", async () => {
 		const controller = new AbortController();
 		controller.abort();
-		const outcome = await runSubagentTask(
+		const outcome = await runDelegateTask(
 			{ task: "do a thing" },
 			{ cwd: "/tmp" },
 			{ signal: controller.signal },
@@ -54,7 +54,7 @@ describe("runSubagentTask (SDK-free paths)", () => {
 		const statuses: string[] = [];
 		const controller = new AbortController();
 		controller.abort();
-		await runSubagentTask(
+		await runDelegateTask(
 			{ task: "do a thing" },
 			{ cwd: "/tmp" },
 			{ signal: controller.signal, onStatus: (s) => statuses.push(s) },

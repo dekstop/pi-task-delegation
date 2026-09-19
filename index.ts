@@ -1,10 +1,10 @@
 /**
  * pi-task-delegation — Pi extension entry point.
  *
- * Registers a single `subagent` tool that delegates a task to a fresh,
+ * Registers a single `delegate` tool that delegates a task to a fresh,
  * isolated in-process child AgentSession (see executor.ts). The child gets a
  * clean context (no parent history), the project working directory, and the
- * normal Pi tools (read, bash, edit, write) — but never the `subagent` tool
+ * normal Pi tools (read, bash, edit, write) — but never the `delegate` tool
  * (no recursive delegation).
  *
  * The pure logic lives in tool.ts (SDK-free at load time) so it is testable
@@ -13,20 +13,20 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { StringEnum } from "@mariozechner/pi-ai";
 import { Type } from "typebox";
-import { runSubagentTask } from "./tool.js";
+import { runDelegateTask } from "./tool.js";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerTool({
-		name: "subagent",
-		label: "Subagent",
+		name: "delegate",
+		label: "Delegate",
 		description:
-			"Delegate a self-contained task to a fresh, isolated subagent. " +
-			"The subagent runs in a clean context (no shared conversation history) " +
+			"Delegate a self-contained task to a fresh, isolated delegate. " +
+			"The delegate runs in a clean context (no shared conversation history) " +
 			"with the project working directory and the normal tools (read, bash, edit, write), " +
-			"but cannot delegate further. Returns the subagent's final answer.",
-		promptSnippet: "Delegate a task to a fresh, isolated subagent (clean context, no further delegation)",
+			"but cannot delegate further. Returns the delegate's final answer.",
+		promptSnippet: "Delegate a task to a fresh, isolated delegate (clean context, no further delegation)",
 		promptGuidelines: [
-			"Use subagent to delegate a self-contained task to a fresh subagent when the work is isolated and does not need the parent's conversation history.",
+			"Use delegate to delegate a self-contained task to a fresh delegate when the work is isolated and does not need the parent's conversation history.",
 		],
 		parameters: Type.Object({
 			task: Type.String({ description: "The task to delegate, in natural language." }),
@@ -38,7 +38,7 @@ export default function (pi: ExtensionAPI) {
 			),
 		}),
 		async execute(_toolCallId, params, signal, onUpdate, ctx) {
-			const outcome = await runSubagentTask(
+			const outcome = await runDelegateTask(
 				{ task: params.task, scratch: params.scratch },
 				{ cwd: ctx.cwd },
 				{

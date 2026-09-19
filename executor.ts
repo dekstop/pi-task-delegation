@@ -4,7 +4,7 @@
  * Runs a delegated task in a fresh, in-process child AgentSession with a
  * clean context (no parent history). The child receives the explicit task
  * text, the project working directory, and the normal Pi tools
- * (read, bash, edit, write) — but never the `subagent` tool (no recursive
+ * (read, bash, edit, write) — but never the `delegate` tool (no recursive
  * delegation). The child uses the default model (no model selection).
  *
  * The Pi SDK is imported lazily inside executeChildTask so this module (and
@@ -35,13 +35,13 @@ function toMessage(err: unknown): string {
 }
 
 /**
- * Build the subagent framing appended to the child's default system prompt.
+ * Build the delegate framing appended to the child's default system prompt.
  * Keeps the full default prompt (tools, guidelines, project context) and
- * appends the subagent instructions plus, when enabled, the scratch path.
+ * appends the delegate instructions plus, when enabled, the scratch path.
  */
-export function buildSubagentFraming(scratchPath?: string | null): string {
+export function buildDelegateFraming(scratchPath?: string | null): string {
 	const lines = [
-		"You are a subagent. You have a fresh, isolated context: you do NOT share the parent agent's conversation history.",
+		"You are a delegate. You have a fresh, isolated context: you do NOT share the parent agent's conversation history.",
 		"The task given to you is authoritative. Do the work needed to complete it using your tools.",
 		"Keep your final answer concise: state the result, not a transcript of your steps.",
 	];
@@ -187,8 +187,8 @@ export async function executeChildTask(
 		return { ok: false, output: "", error: toMessage(err) };
 	}
 
-	// 3. Subagent framing appended to the default system prompt.
-	const framing = buildSubagentFraming(scratchPath);
+	// 3. Delegate framing appended to the default system prompt.
+	const framing = buildDelegateFraming(scratchPath);
 
 	emit("starting");
 
@@ -203,7 +203,7 @@ export async function executeChildTask(
 		const sdk = await import("@mariozechner/pi-coding-agent");
 		const { DefaultResourceLoader, SessionManager, createAgentSession, getAgentDir } = sdk;
 
-		// 4. Resource loader with the appended subagent framing.
+		// 4. Resource loader with the appended delegate framing.
 		const loader = new DefaultResourceLoader({
 			cwd,
 			agentDir: agentDir ?? getAgentDir(),
@@ -212,7 +212,7 @@ export async function executeChildTask(
 		await loader.reload();
 
 		// 5. Fresh in-process child session: clean context, project cwd,
-		//    normal tools, never `subagent`.
+		//    normal tools, never `delegate`.
 		const created = await createAgentSession({
 			resourceLoader: loader,
 			sessionManager: SessionManager.inMemory(),

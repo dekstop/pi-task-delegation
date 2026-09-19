@@ -14,7 +14,7 @@ The extension should be named:
 
 The initial user-facing tool should be named:
 
-`subagent`
+`delegate`
 
 The core abstraction is:
 
@@ -62,7 +62,7 @@ The child should **not** inherit the parent's conversation history by default.
 
 Phase 1 provides:
 
-1. A `subagent` tool available to the parent Pi session.
+1. A `delegate` tool available to the parent Pi session.
 2. Creation of a fresh child `AgentSession`.
 3. Explicit task handoff from parent to child.
 4. Execution of the task in the child context.
@@ -115,7 +115,7 @@ The architecture should not prevent these capabilities being added later.
 
 ### 4.4 Parallel execution
 
-Do not implement simultaneous or background subagents.
+Do not implement simultaneous or background delegates.
 
 Phase 1 execution is intentionally serial:
 
@@ -167,7 +167,7 @@ The parent task is the explicit context boundary.
 The intended initial tool interface is approximately:
 
 ```ts
-subagent({
+delegate({
   task: string,
   scratch?: "none" | "ephemeral" | "retain"
 })
@@ -216,7 +216,7 @@ Supported values:
 
 #### `none`
 
-No dedicated subagent scratch directory is created.
+No dedicated delegate scratch directory is created.
 
 #### `ephemeral`
 
@@ -347,7 +347,7 @@ The child needs only enough information to understand the delegation boundary an
 
 ## 9. Recursive Delegation
 
-Phase 1 should not expose the `subagent` tool to child sessions by default.
+Phase 1 should not expose the `delegate` tool to child sessions by default.
 
 The intended initial topology is:
 
@@ -392,7 +392,7 @@ Phase 1 should not provide:
 The parent call should conceptually behave like:
 
 ```text
-subagent(task)
+delegate(task)
     |
     |-- create child
     |-- execute child
@@ -424,7 +424,7 @@ The result should be concise and useful.
 A typical result might be:
 
 ```text
-Subagent completed.
+Delegate completed.
 
 The failure is caused by X. The parser now produces Y while the
 test expects Z. The relevant code is in A and the failing test is
@@ -436,7 +436,7 @@ No files were modified.
 If artefacts were produced:
 
 ```text
-Subagent completed.
+Delegate completed.
 
 Generated the requested analysis in:
 <scratch path>
@@ -477,7 +477,7 @@ or another project-local directory.
 The extension should own a dedicated location, conceptually:
 
 ```text
-~/.pi/agent/subagents/<task-id>/
+~/.pi/agent/delegates/<task-id>/
     metadata.json
     task.md
     artifacts/
@@ -746,7 +746,7 @@ Phase 1 can implement this directly using a fresh Pi `AgentSession`.
 Conceptually:
 
 ```text
-subagent tool
+delegate tool
       |
       v
 Task lifecycle
@@ -894,7 +894,7 @@ At minimum, tests should cover:
 
 ### Basic delegation
 
-* Parent can invoke `subagent`.
+* Parent can invoke `delegate`.
 * Child session is created.
 * Child receives the supplied task.
 * Child executes successfully.
@@ -985,7 +985,7 @@ Verify that the Phase 1 child does not unexpectedly receive the delegation tool.
 Phase 1 is complete when all of the following are true:
 
 * [ ] `pi-task-delegation` can be installed/loaded as a Pi extension.
-* [ ] The extension exposes a `subagent` tool.
+* [ ] The extension exposes a `delegate` tool.
 * [ ] The tool accepts a natural-language task.
 * [ ] The child runs in a fresh Pi agent context.
 * [ ] Parent conversation history is not copied into the child.

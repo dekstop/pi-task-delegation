@@ -3,29 +3,29 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import {
-	buildSubagentFraming,
+	buildDelegateFraming,
 	classifyOutcome,
 	executeChildTask,
 	extractFinalAssistantText,
 	type AgentMessageLike,
 } from "../executor.js";
 
-describe("buildSubagentFraming", () => {
-	it("frames the child as an isolated subagent with an authoritative task", () => {
-		const framing = buildSubagentFraming();
-		expect(framing).toMatch(/subagent/i);
+describe("buildDelegateFraming", () => {
+	it("frames the child as an isolated delegate with an authoritative task", () => {
+		const framing = buildDelegateFraming();
+		expect(framing).toMatch(/delegate/i);
 		expect(framing).toMatch(/fresh/i);
 		expect(framing).toMatch(/authoritative/i);
 		expect(framing).toMatch(/concise/i);
 	});
 
 	it("omits the scratch line when no scratch path is given", () => {
-		expect(buildSubagentFraming()).not.toMatch(/scratch directory/i);
-		expect(buildSubagentFraming(null)).not.toMatch(/scratch directory/i);
+		expect(buildDelegateFraming()).not.toMatch(/scratch directory/i);
+		expect(buildDelegateFraming(null)).not.toMatch(/scratch directory/i);
 	});
 
 	it("includes the scratch path when one is given", () => {
-		const framing = buildSubagentFraming("/tmp/scratch/t1");
+		const framing = buildDelegateFraming("/tmp/scratch/t1");
 		expect(framing).toMatch(/scratch directory is \/tmp\/scratch\/t1/);
 	});
 });

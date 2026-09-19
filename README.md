@@ -40,10 +40,10 @@ Verify with `pi list`.
 
 ## Usage
 
-The extension registers a `subagent` tool. The parent agent calls it with:
+The extension registers a `delegate` tool. The parent agent calls it with:
 
 ```ts
-subagent({
+delegate({
   task: "Investigate why the test suite is failing.",
   scratch: "ephemeral"  // optional: "none" (default), "ephemeral", "retain"
 })
@@ -56,7 +56,7 @@ subagent({
 
 ## Scratch storage
 
-Optional scratch directories are created outside the project directory under `~/.pi/agent/subagents/`. Each delegated task gets an isolated directory. The scratch base directory is configurable.
+Optional scratch directories are created inside the project under `.pi/delegates/<task-id>/`, with `artifacts/` and `tmp/` subdirectories. Each delegated task gets an isolated directory. The directory is gitignored.
 
 | Value | Behaviour |
 |-------|-----------|
