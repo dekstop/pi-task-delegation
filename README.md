@@ -56,7 +56,7 @@ delegate({
 
 ## Scratch storage
 
-Optional scratch directories are created inside the project under `.pi/delegates/<task-id>/`, with `artifacts/` and `tmp/` subdirectories. Each delegated task gets an isolated directory. The directory is gitignored.
+Optional scratch directories are created inside the project under `.pi/delegates/<task-id>/`, with `artifacts/` and `tmp/` subdirectories. Each delegated task gets an isolated directory.
 
 | Value | Behaviour |
 |-------|-----------|
@@ -64,8 +64,14 @@ Optional scratch directories are created inside the project under `.pi/delegates
 | `ephemeral` | Created, removed after task completes, fails, or is cancelled |
 | `retain` | Created, retained after execution. The result identifies the path. |
 
+## Setup
+
+Add the scratch directory to your project's `.gitignore` to avoid committing intermediate files:
+
+```text
+.pi/delegates/
+```
+
 ## Status
 
 ✅ **Phase 1 complete** — core delegation, scratch storage, error handling, and cancellation.
-
-See `SPEC.md` for the full specification and `ROADMAP.md` for future phases.
