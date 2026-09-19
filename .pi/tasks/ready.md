@@ -11,3 +11,5 @@
 | T-007 | Distribution / pi-package packaging | backlog |
 | T-008 | Scope parameter — isolated subagent | complete |
 | T-009 | Automated integration tests with live model | ready |
+| T-010 | Status display while delegate is running | backlog |
+| T-011 | Live child output streaming in TUI | backlog |
