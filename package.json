@@ -2,6 +2,7 @@
   "name": "pi-task-delegation",
   "version": "0.1.0",
   "description": "Pi extension for context-isolated task delegation",
+  "license": "MIT",
   "keywords": ["pi-package"],
   "type": "module",
   "scripts": {
