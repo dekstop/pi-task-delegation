@@ -319,7 +319,8 @@ export async function executeChildTask(
 					live += ae.delta;
 					scheduleFlush();
 				} else if (ae?.type === "thinking_delta") {
-					// Skip thinking content — it pollishes the live output.
+					live += ae.delta;
+					scheduleFlush();
 				}
 			}
 		});
