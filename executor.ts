@@ -302,10 +302,11 @@ export async function executeChildTask(
 					}
 				}
 			} else if (event.type === "tool_execution_end") {
-				const status = event.isError ? "✗" : "✓";
-				live += " " + status;
-				scheduleFlush();
-			} else if (event.type === "message_update") {
+					if (event.isError) {
+						live += " ✗";
+						scheduleFlush();
+					}
+				} else if (event.type === "message_update") {
 				const ae = event.assistantMessageEvent;
 				if (ae?.type === "text_delta") {
 					live += ae.delta;
