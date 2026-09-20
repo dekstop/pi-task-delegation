@@ -45,4 +45,6 @@ Commit every successful feature implementation with a descriptive message. Use t
 
 Keep `README.md` and `AGENTS.md` below 7k bytes at all times.
 
+Use delegates for research tasks to save context.
+
 We use British spelling, date formats, and measurement units.

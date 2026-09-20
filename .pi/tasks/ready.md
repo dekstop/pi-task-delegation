@@ -13,3 +13,4 @@
 | T-009 | Automated integration tests with live model | ready |
 | T-010 | Status display while delegate is running | active (built, pending manual TUI check) |
 | T-011 | Live child output streaming in TUI | active (built, pending manual TUI check) |
+| T-012 | Inherit parent context option | ready |
