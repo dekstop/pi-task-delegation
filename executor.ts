@@ -280,7 +280,7 @@ export async function executeChildTask(
 		//     assistant text, and reasoning through the onStatus channel.
 		unsubscribe = session.subscribe((event: any) => {
 			if (event.type === "tool_execution_start") {
-				live += (live ? "\n" : "") + "→ " + event.toolName;
+				live += (live ? "\n" : "") + "→ [" + event.toolName + "] ";
 				scheduleFlush();
 			} else if (event.type === "tool_execution_update") {
 				// partialResult.content contains accumulated output (not deltas).
@@ -311,8 +311,7 @@ export async function executeChildTask(
 					live += ae.delta;
 					scheduleFlush();
 				} else if (ae?.type === "thinking_delta") {
-					live += "[think] " + ae.delta;
-					scheduleFlush();
+					// Skip thinking content — it pollishes the live output.
 				}
 			}
 		});
