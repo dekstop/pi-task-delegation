@@ -48,7 +48,15 @@ export default function (pi: ExtensionAPI) {
 		renderCall(args, theme, context) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
 			const task = typeof args?.task === "string" ? args.task : "";
-			text.setText("────────────────────\n" + theme.fg("toolTitle", theme.bold("Delegate")) + ": " + task);
+			const scope = args?.scope ?? "project";
+			const scratch = args?.scratch;
+			let label: string;
+			if (scope === "isolated") {
+				label = scratch === "retain" ? "Isolated delegate (scratch retained)" : "Isolated delegate";
+			} else {
+				label = "Delegate";
+			}
+			text.setText("────────────────────\n" + theme.fg("toolTitle", theme.bold(label)) + ": " + task);
 			return text;
 		},
 		renderResult(result, _options, _theme, context) {
