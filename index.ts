@@ -49,7 +49,7 @@ export default function (pi: ExtensionAPI) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
 			const task = typeof args?.task === "string" ? args.task : "";
 			const snippet = task.length > 80 ? task.slice(0, 80) + "…" : task;
-			text.setText(theme.fg("toolTitle", theme.bold("Delegate")) + ": " + snippet);
+			text.setText("───\n" + theme.fg("toolTitle", theme.bold("Delegate")) + ": " + snippet);
 			return text;
 		},
 		renderResult(result, _options, _theme, context) {

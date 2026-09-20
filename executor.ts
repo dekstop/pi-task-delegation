@@ -282,7 +282,7 @@ export async function executeChildTask(
 			if (event.type === "tool_execution_start") {
 				const prefix = (live ? "\n" : "") + "→ [" + event.toolName + "] ";
 				if (event.toolName === "bash" && event.args?.command) {
-					live += prefix + "$ " + event.args.command;
+					live += prefix + "$ " + event.args.command + "\n";
 				} else {
 					live += prefix;
 				}
@@ -331,7 +331,7 @@ export async function executeChildTask(
 
 		// 7c. Final flush so the last chunk isn't lost.
 		clearFlushTimer();
-		if (live) emit("\n───\n" + live);
+		if (live) emit("───\n" + live);
 
 		// 8. Snapshot the conversation (for final-message extraction).
 		messages = (session.messages ?? []).slice();
