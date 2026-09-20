@@ -273,12 +273,25 @@ export async function executeChildTask(
 			else signal.addEventListener("abort", abortHandler);
 		}
 
-		// 7a. Live transcript: stream the child's tool calls and assistant
-		//     text through the onStatus channel while the child runs.
+		// 7a. Live transcript: stream the child's tool calls, tool output,
+		//     and assistant text through the onStatus channel while the child runs.
 		unsubscribe = session.subscribe((event: any) => {
 			if (event.type === "tool_execution_start") {
 				live += (live ? "\n" : "") + "→ " + event.toolName;
 				scheduleFlush();
+			} else if (event.type === "tool_execution_update") {
+				// Stream tool output (e.g. bash stdout) from partialResult.
+				const content = event.partialResult?.content;
+				if (Array.isArray(content)) {
+					const text = content
+						.filter((p: any) => p.type === "text" && typeof p.text === "string")
+						.map((p: any) => p.text)
+						.join("");
+					if (text) {
+						live += text;
+						scheduleFlush();
+					}
+				}
 			} else if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
 				live += event.assistantMessageEvent.delta;
 				scheduleFlush();
