@@ -6,23 +6,31 @@ When the work is isolated and does not need the parent agent's conversation hist
 
 ```ts
 delegate({
-  task: "Investigate why the test suite is failing.",
-  scope: "project"       // optional: "project" (default) | "isolated"
-  scratch: "ephemeral"   // optional: "ephemeral" (default) | "retain" — isolated scope only
+  task: "Investigate why the test suite is failing."
 })
 ```
 
-## Execution scopes
+This is a **project-scoped** delegate (the default). The child works in the project working directory and has access to project files.
 
-- **`project`** (default) — the child works in the project working directory, with access to project files. No scratch directory is created.
-- **`isolated`** — the child works in a fresh, isolated scratch directory with no access to project files. Use this when the task should not read or modify project files.
+For sandboxed work that should not read or modify project files, use **isolated** scope:
 
-## Scratch lifecycle (isolated scope only)
+```ts
+delegate({
+  task: "Run the linter and report any errors.",
+  scope: "isolated"
+})
+```
 
-The `scratch` parameter controls the lifecycle of the isolated scratch directory:
+## Retaining the scratch directory
 
-- **`ephemeral`** (default) — scratch created and removed after the task finishes (success, failure, or cancellation).
-- **`retain`** — scratch created and kept after execution; the result message identifies the path.
+By default, isolated delegates delete their scratch directory after execution. To retain it:
 
-The `scratch` parameter is ignored for `scope: "project"`.
+```ts
+delegate({
+  task: "Build the project and capture the output.",
+  scope: "isolated",
+  scratch: "retain"
+})
+```
 
+When `scratch: "retain"` is set, the child's scratch path is included in the result so the parent can access any files created during execution.
