@@ -48,7 +48,7 @@ export default function (pi: ExtensionAPI) {
 		renderCall(args, theme, context) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
 			const task = typeof args?.task === "string" ? args.task : "";
-			const snippet = task.length > 40 ? task.slice(0, 40) + "…" : task;
+			const snippet = task.length > 80 ? task.slice(0, 80) + "…" : task;
 			text.setText(theme.fg("toolTitle", theme.bold("Delegate")) + ": " + snippet);
 			return text;
 		},
