@@ -280,7 +280,7 @@ export async function executeChildTask(
 		//     assistant text, and reasoning through the onStatus channel.
 		unsubscribe = session.subscribe((event: any) => {
 			if (event.type === "tool_execution_start") {
-				const prefix = (live ? "\n" : "") + "→ [" + event.toolName + "] ";
+				const prefix = (live ? "\n\n" : "") + "→ [" + event.toolName + "] ";
 				if (event.toolName === "bash" && event.args?.command) {
 					live += prefix + "$ " + event.args.command + "\n";
 				} else if (event.args?.path) {
