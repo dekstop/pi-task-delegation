@@ -280,7 +280,12 @@ export async function executeChildTask(
 		//     assistant text, and reasoning through the onStatus channel.
 		unsubscribe = session.subscribe((event: any) => {
 			if (event.type === "tool_execution_start") {
-				live += (live ? "\n" : "") + "→ [" + event.toolName + "] ";
+				const prefix = (live ? "\n" : "") + "→ [" + event.toolName + "] ";
+				if (event.toolName === "bash" && event.args?.command) {
+					live += prefix + "$ " + event.args.command;
+				} else {
+					live += prefix;
+				}
 				scheduleFlush();
 			} else if (event.type === "tool_execution_update") {
 				// partialResult.content contains accumulated output (not deltas).
@@ -326,7 +331,7 @@ export async function executeChildTask(
 
 		// 7c. Final flush so the last chunk isn't lost.
 		clearFlushTimer();
-		if (live) emit(live);
+		if (live) emit("\n───\n" + live);
 
 		// 8. Snapshot the conversation (for final-message extraction).
 		messages = (session.messages ?? []).slice();
