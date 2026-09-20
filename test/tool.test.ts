@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { mapChildResultToText, runDelegateTask } from "../tool.js";
-import type { ChildResult } from "../executor.js";
+import { mapChildResultToText, runDelegateTask } from "../src/tool.js";
+import type { ChildResult } from "../src/executor.js";
 
 describe("mapChildResultToText", () => {
 	it("returns the child's final text on success", () => {

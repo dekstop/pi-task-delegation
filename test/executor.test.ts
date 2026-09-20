@@ -8,7 +8,7 @@ import {
 	executeChildTask,
 	extractFinalAssistantText,
 	type AgentMessageLike,
-} from "../executor.js";
+} from "../src/executor.js";
 
 describe("buildDelegateFraming", () => {
 	it("frames the child as a delegate with an authoritative task", () => {

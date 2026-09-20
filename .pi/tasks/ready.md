@@ -8,7 +8,7 @@
 | T-004 | Subagent tool registration | archived |
 | T-005 | Tests — delegation and isolation | archived (unit tests complete, integration tests → T-009) |
 | T-006 | Tests — scratch, failure, cancellation | archived (unit tests complete, integration tests → T-009) |
-| T-007 | Distribution / pi-package packaging | backlog |
+| T-007 | Distribution / pi-package packaging | active (src/ move + pi manifest + peerDeps done; clean-load verify pending a git remote) |
 | T-008 | Scope parameter — isolated subagent | archived |
 | T-009 | Automated integration tests with live model | ready |
 | T-010 | Status display while delegate is running | archived (built, verified via live delegate runs) |

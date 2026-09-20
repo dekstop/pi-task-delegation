@@ -6,11 +6,11 @@ Read `README.md` to get up to speed with the current project.
 
 ## Project-specific
 
-- Extension entry point: `index.ts`
-- Supporting modules: `executor.ts`, `scratch.ts`
+- Extension entry point: `src/index.ts`
+- Supporting modules: `src/tool.ts`, `src/executor.ts`, `src/scratch.ts`
 - Tests in `test/` directory, run with `npx vitest run`
 - The extension is loaded by Pi via jiti — no build step
-- `@mariozechner/pi-coding-agent` and `typebox` are provided by Pi at runtime, not installed locally
+- Core Pi packages are provided by Pi at runtime, not bundled (see T-007 for packaging)
 - Scratch storage: system tmp under `os.tmpdir()/pi-delegates/<task-id>/`
 - The child session must NOT receive the `delegate` tool (no recursive delegation in Phase 1)
 - Use `createAgentSession()` with `SessionManager.inMemory()` for child sessions
