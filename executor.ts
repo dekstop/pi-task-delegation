@@ -226,6 +226,7 @@ export async function executeChildTask(
 	let lastEmitted = "";
 	let promptError: string | undefined;
 	let messages: AgentMessageLike[] = [];
+	let toolOutputTracker: Record<string, string> = {};
 
 	// Coalesce transcript updates (~10/s cap) so the TUI isn't flooded per delta.
 	// Only emit the delta since last flush so the TUI doesn't duplicate output.
@@ -280,27 +281,39 @@ export async function executeChildTask(
 		}
 
 		// 7a. Live transcript: stream the child's tool calls, tool output,
-		//     and assistant text through the onStatus channel while the child runs.
+		//     assistant text, and reasoning through the onStatus channel.
 		unsubscribe = session.subscribe((event: any) => {
 			if (event.type === "tool_execution_start") {
 				live += (live ? "\n" : "") + "→ " + event.toolName;
 				scheduleFlush();
 			} else if (event.type === "tool_execution_update") {
-				// Stream tool output (e.g. bash stdout) from partialResult.
+				// partialResult.content contains accumulated output (not deltas).
+				// Track per toolCallId so we only append new text.
 				const content = event.partialResult?.content;
-				if (Array.isArray(content)) {
+				if (Array.isArray(content) && event.toolCallId) {
 					const text = content
 						.filter((p: any) => p.type === "text" && typeof p.text === "string")
 						.map((p: any) => p.text)
 						.join("");
 					if (text) {
-						live += text;
-						scheduleFlush();
+						const last = toolOutputTracker[event.toolCallId] ?? "";
+						const delta = text.slice(last.length);
+						if (delta) {
+							live += delta;
+							toolOutputTracker[event.toolCallId] = text;
+							scheduleFlush();
+						}
 					}
 				}
-			} else if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
-				live += event.assistantMessageEvent.delta;
-				scheduleFlush();
+			} else if (event.type === "message_update") {
+				const ae = event.assistantMessageEvent;
+				if (ae?.type === "text_delta") {
+					live += ae.delta;
+					scheduleFlush();
+				} else if (ae?.type === "thinking_delta") {
+					live += "[think] " + ae.delta;
+					scheduleFlush();
+				}
 			}
 		});
 
