@@ -283,6 +283,8 @@ export async function executeChildTask(
 				const prefix = (live ? "\n" : "") + "→ [" + event.toolName + "] ";
 				if (event.toolName === "bash" && event.args?.command) {
 					live += prefix + "$ " + event.args.command + "\n";
+				} else if (event.args?.path) {
+					live += prefix + event.args.path + "\n";
 				} else {
 					live += prefix;
 				}
