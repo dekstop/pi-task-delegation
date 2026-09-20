@@ -331,7 +331,7 @@ export async function executeChildTask(
 
 		// 7c. Final flush so the last chunk isn't lost.
 		clearFlushTimer();
-		if (live) emit("───\n" + live);
+		if (live) emit(live);
 
 		// 8. Snapshot the conversation (for final-message extraction).
 		messages = (session.messages ?? []).slice();

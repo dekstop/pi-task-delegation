@@ -55,7 +55,8 @@ export default function (pi: ExtensionAPI) {
 		renderResult(result, _options, _theme, context) {
 			const text = (context.lastComponent as Text | undefined) ?? new Text("", 0, 0);
 			const first = result.content[0];
-			text.setText(first?.type === "text" ? first.text : "");
+			const content = first?.type === "text" ? first.text : "";
+			text.setText("───\n" + content);
 			return text;
 		},
 		async execute(_toolCallId, params, signal, onUpdate, ctx) {
