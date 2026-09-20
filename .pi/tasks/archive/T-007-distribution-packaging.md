@@ -27,9 +27,9 @@ Package this extension for distribution (git) as a pi package. Deferred from T-0
 - Does `pi install git:<repo>` run `npm install` (which may auto-install the `"*"` peer deps) or `--omit=dev`? Either way Pi's bundled copies are used at runtime, so it's harmless — but confirm on the clean-load check.
 - Repo URL / remote for the git install (none configured yet — see "Next").
 
-**Progress:** Steps 1–5 done — `src/` move, test imports updated, `tsconfig.json` updated, `package.json` has `pi` manifest + `peerDependencies` (four, `"*"`) + `pi-package` keyword; 39 tests pass, typecheck clean. Step 6 (clean-load verification) pending — needs a git remote.
+**Progress:** Steps 1–6 done — `src/` move, test imports updated, `tsconfig.json` updated, `package.json` has `pi` manifest + `peerDependencies` (four, `"*"`) + `pi-package` keyword; 39 tests pass, typecheck clean. Step 6 (clean-load verification) confirmed by manual install from git.
 
-**Next:** Set up a git remote, then verify a clean `pi install` / `pi -e` load in a fresh environment.
+**Status:** Archived (2026-09-20).
 
 **Acceptance criteria:**
 - `pi install` (or `pi -e`) loads the extension in a clean env.
