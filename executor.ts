@@ -223,22 +223,18 @@ export async function executeChildTask(
 	let unsubscribe: (() => void) | null = null;
 	let flushTimer: ReturnType<typeof setTimeout> | null = null;
 	let live = "";
-	let lastEmitted = "";
 	let promptError: string | undefined;
 	let messages: AgentMessageLike[] = [];
 	let toolOutputTracker: Record<string, string> = {};
 
 	// Coalesce transcript updates (~10/s cap) so the TUI isn't flooded per delta.
-	// Only emit the delta since last flush so the TUI doesn't duplicate output.
+	// Emit the full accumulated text each flush so the TUI always shows the
+	// complete live transcript rather than partial chunks.
 	const scheduleFlush = () => {
 		if (flushTimer !== null) return;
 		flushTimer = setTimeout(() => {
 			flushTimer = null;
-			const delta = live.slice(lastEmitted.length);
-			if (delta) {
-				emit(delta);
-				lastEmitted = live;
-			}
+			emit(live);
 		}, 100);
 	};
 	const clearFlushTimer = () => {
@@ -330,8 +326,7 @@ export async function executeChildTask(
 
 		// 7c. Final flush so the last chunk isn't lost.
 		clearFlushTimer();
-		const remaining = live.slice(lastEmitted.length);
-		if (remaining) emit(remaining);
+		if (live) emit(live);
 
 		// 8. Snapshot the conversation (for final-message extraction).
 		messages = (session.messages ?? []).slice();
